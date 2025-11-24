@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Settings, Moon, Bell, Shield, LogOut, ChevronRight, LogIn, Sun, History } from 'lucide-react';
 import { useAppStore } from '../store/useStore';
 import LoginModal from '../components/Auth/LoginModal';
@@ -6,11 +6,28 @@ import { useNavigate } from 'react-router-dom';
 
 const ProfilePage: React.FC = () => {
   const { user, logout, settings, updateSettings } = useAppStore();
-  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = React.useState(false);
   const navigate = useNavigate();
 
-  const toggleTheme = () => {
-    updateSettings({ theme: settings.theme === 'dark' ? 'light' : 'dark' });
+  const toggleTheme = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((rect.left + rect.width / 2) / window.innerWidth) * 100;
+    const y = ((rect.top + rect.height / 2) / window.innerHeight) * 100;
+    
+    const newTheme = settings.theme === 'dark' ? 'light' : 'dark';
+
+    // Trigger global theme animation
+    const event = new CustomEvent('themeAnimation', {
+      detail: {
+        newTheme,
+        clickX: x,
+        clickY: y
+      }
+    });
+    window.dispatchEvent(event);
+
+    // Update theme immediately
+    updateSettings({ theme: newTheme });
   };
 
   const menuItems = [
@@ -24,7 +41,7 @@ const ProfilePage: React.FC = () => {
       icon: settings.theme === 'dark' ? Sun : Moon, 
       label: settings.theme === 'dark' ? '浅色模式' : '深色模式', 
       value: settings.theme === 'dark' ? '已开启' : '已关闭',
-      action: toggleTheme
+      action: (e?: React.MouseEvent) => toggleTheme(e as React.MouseEvent)
     },
     { icon: Bell, label: '消息提醒', value: '已开启', action: () => {} },
     { icon: Shield, label: '隐私设置', value: '', action: () => {} },
@@ -56,10 +73,17 @@ const ProfilePage: React.FC = () => {
             {menuItems.map((item, idx) => (
               <div 
                 key={item.label}
-                onClick={item.action}
+                onClick={(e) => {
+                  if (item.label === '深色模式' || item.label === '浅色模式') {
+                    item.action(e);
+                  } else {
+                    item.action();
+                  }
+                }}
                 className={`
                   flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors
                   ${idx !== menuItems.length - 1 ? 'border-b border-gray-50 dark:border-slate-700' : ''}
+                  ${item.label === '深色模式' || item.label === '浅色模式' ? 'relative' : ''}
                 `}
               >
                 <div className="flex items-center gap-3">

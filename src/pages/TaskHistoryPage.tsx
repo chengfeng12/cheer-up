@@ -28,7 +28,7 @@ const TaskHistoryPage: React.FC = () => {
   }, [tasks]);
 
   return (
-    <div className="p-6 min-h-full pb-24">
+    <div className="p-6 min-h-full">
       {/* Header */}
       <header className="flex items-center gap-4 mb-8">
         <button 
