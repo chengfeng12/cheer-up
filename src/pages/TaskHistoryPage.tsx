@@ -4,13 +4,13 @@ import { zhCN } from 'date-fns/locale';
 import { CheckCircle2, Circle, ChevronLeft, CalendarClock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useAppStore } from '../store/useStore';
+import { useHybridStore } from '../store/useHybridStore';
 
 const TaskHistoryPage: React.FC = () => {
   const navigate = useNavigate();
-  const { tasks } = useAppStore();
+  const { tasks } = useHybridStore();
 
-  // Group tasks by date, excluding today
+  // 按日期分组任务，排除今天
   const historyGroups = useMemo(() => {
     const groups: Record<string, typeof tasks> = {};
     

@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import TabBar from '../Navigation/TabBar';
-import { useAppStore } from '../../store/useStore';
+import { useHybridStore } from '../../store/useHybridStore';
 import { AnimatePresence, motion } from 'framer-motion';
 import ThemeTransition from '../ThemeTransition';
 
 const MobileLayout: React.FC = () => {
-  const { settings } = useAppStore();
+  const { settings } = useHybridStore();
   const location = useLocation();
   const [themeAnimating, setThemeAnimating] = useState(false);
   const [themeAnimationData, setThemeAnimationData] = useState({
@@ -15,10 +15,10 @@ const MobileLayout: React.FC = () => {
     clickY: 50
   });
 
-  // Hide TabBar on history page
+  // 在历史页面隐藏底部导航栏
   const hideTabBar = location.pathname === '/history';
 
-  // Listen for theme animation trigger
+  // 监听主题动画触发器
   useEffect(() => {
     const handleThemeAnimation = (event: CustomEvent) => {
       const { newTheme, clickX, clickY } = event.detail;

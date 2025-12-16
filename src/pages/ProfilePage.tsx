@@ -1,11 +1,12 @@
 import React from 'react';
 import { Settings, Moon, Bell, Shield, LogOut, ChevronRight, LogIn, Sun, History } from 'lucide-react';
-import { useAppStore } from '../store/useStore';
+import { useHybridStore } from '../store/useHybridStore';
 import LoginModal from '../components/Auth/LoginModal';
+import SyncSettings from '../components/Settings/SyncSettings';
 import { useNavigate } from 'react-router-dom';
 
 const ProfilePage: React.FC = () => {
-  const { user, logout, settings, updateSettings } = useAppStore();
+  const { user, logout, settings, updateSettings, isAuthenticated } = useHybridStore();
   const [showLoginModal, setShowLoginModal] = React.useState(false);
   const navigate = useNavigate();
 
@@ -16,7 +17,7 @@ const ProfilePage: React.FC = () => {
     
     const newTheme = settings.theme === 'dark' ? 'light' : 'dark';
 
-    // Trigger global theme animation
+    // 触发全局主题动画
     const event = new CustomEvent('themeAnimation', {
       detail: {
         newTheme,
@@ -26,7 +27,7 @@ const ProfilePage: React.FC = () => {
     });
     window.dispatchEvent(event);
 
-    // Update theme immediately
+    // 立即更新主题
     updateSettings({ theme: newTheme });
   };
 
@@ -52,21 +53,25 @@ const ProfilePage: React.FC = () => {
     <div className="p-6 relative min-h-full">
       <header className="mb-8 flex items-center gap-4">
         <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center text-2xl overflow-hidden">
-          {user.avatar ? (
+          {user?.avatar ? (
             <img src={user.avatar} alt="avatar" className="w-full h-full object-cover" />
           ) : (
             '👤'
           )}
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-white">{user.name}</h1>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-white">
+            {user ? user.name : '请登录'}
+          </h1>
           <p className="text-gray-400 text-sm">
-            {user.isGuest ? '开启你的记录之旅' : '欢迎回来'}
+            欢迎回来
           </p>
         </div>
       </header>
 
       <div className="space-y-6">
+        <SyncSettings />
+
         <section>
           <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">偏好设置</h3>
           <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 overflow-hidden transition-colors">
@@ -101,7 +106,7 @@ const ProfilePage: React.FC = () => {
           </div>
         </section>
 
-        {user.isGuest ? (
+        {!user ? (
           <button 
             onClick={() => setShowLoginModal(true)}
             className="w-full py-4 text-white font-medium bg-emerald-500 rounded-2xl flex items-center justify-center gap-2 hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-200 dark:shadow-none"

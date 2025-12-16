@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { Plus, CheckCircle2, Circle, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAppStore } from '../store/useStore';
+import { useHybridStore } from '../store/useHybridStore';
+import { useSync } from '../hooks/useSync';
 import LoginModal from '../components/Auth/LoginModal';
+import SyncStatus from '../components/Sync/SyncStatus';
 
 const HomePage: React.FC = () => {
   const today = format(new Date(), 'yyyy-MM-dd');
+  useSync(); // 初始化同步钩子
   const { 
     tasks, 
     addTask, 
@@ -16,11 +19,15 @@ const HomePage: React.FC = () => {
     checkIns, 
     addCheckIn, 
     removeCheckIn,
-    user
-  } = useAppStore();
+    user,
+    syncEnabled,
+    pendingSync
+  } = useHybridStore();
 
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [showLoginModal, setShowLoginModal] = useState(false);
+  
+
   
   const todaysTasks = tasks.filter(t => t.date === today);
   const isCheckedIn = checkIns.some(c => c.date === today);
@@ -32,7 +39,7 @@ const HomePage: React.FC = () => {
   };
 
   const checkLogin = () => {
-    if (user.isGuest) {
+    if (!user) {
       vibrate(50);
       setShowLoginModal(true);
       return false;
@@ -40,51 +47,72 @@ const HomePage: React.FC = () => {
     return true;
   };
 
-  const handleAddTask = (e: React.FormEvent) => {
+  const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!checkLogin()) return;
 
     if (newTaskTitle.trim()) {
-      addTask(newTaskTitle.trim());
-      setNewTaskTitle('');
-      vibrate(50); // Light vibration for add
+      try {
+        await addTask(newTaskTitle.trim());
+        setNewTaskTitle('');
+        vibrate(50); // 添加任务的轻微振动
+      } catch (error) {
+        console.error('Failed to add task:', error);
+      }
     }
   };
 
-  const handleCheckIn = () => {
+  const handleCheckIn = async () => {
     if (!checkLogin()) return;
 
-    if (isCheckedIn) {
-      removeCheckIn(today);
-      vibrate(50);
-    } else {
-      addCheckIn({ date: today, mood: 'happy' });
-      vibrate([50, 50, 100]); // Success pattern
+    try {
+      if (isCheckedIn) {
+        await removeCheckIn(today);
+        vibrate(50);
+      } else {
+        await addCheckIn({ date: today, mood: 'happy' });
+        vibrate([50, 50, 100]); // 成功模式
+      }
+    } catch (error) {
+      console.error('Failed to check in:', error);
     }
   };
 
-  const handleToggleTask = (id: string) => {
+  const handleToggleTask = async (id: string) => {
     if (!checkLogin()) return;
-    toggleTask(id);
-    vibrate(20);
+    try {
+      await toggleTask(id);
+      vibrate(20);
+    } catch (error) {
+      console.error('Failed to toggle task:', error);
+    }
   };
 
-  const handleDeleteTask = (id: string) => {
+  const handleDeleteTask = async (id: string) => {
     if (!checkLogin()) return;
-    deleteTask(id);
-    vibrate([30, 30]); // Delete pattern
+    try {
+      await deleteTask(id);
+      vibrate([30, 30]); // 删除模式
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+    }
   };
 
   return (
     <div className="p-6 space-y-8">
       {/* Header */}
       <header>
-        <p className="text-gray-400 text-sm font-medium uppercase tracking-wider">
-          {format(new Date(), 'MMMM do EEEE', { locale: zhCN })}
-        </p>
-        <h1 className="text-3xl font-bold text-slate-800 dark:text-white mt-1">
-          每日专注
-        </h1>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-gray-400 text-sm font-medium uppercase tracking-wider">
+              {format(new Date(), 'MMMM do EEEE', { locale: zhCN })}
+            </p>
+            <h1 className="text-3xl font-bold text-slate-800 dark:text-white mt-1">
+              每日专注
+            </h1>
+          </div>
+          <SyncStatus />
+        </div>
       </header>
 
       {/* Check-in Card */}

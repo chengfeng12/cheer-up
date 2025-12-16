@@ -1,19 +1,19 @@
 import React from 'react';
 import { format, getDaysInMonth, startOfMonth, endOfMonth, isAfter, isBefore, startOfDay } from 'date-fns';
 import CalendarGrid from '../components/Calendar/CalendarGrid';
-import { useAppStore } from '../store/useStore';
+import { useHybridStore } from '../store/useHybridStore';
 
 const CalendarPage: React.FC = () => {
-  const { checkIns } = useAppStore();
+  const { checkIns } = useHybridStore();
   const now = new Date();
   const currentMonthStr = format(now, 'yyyy-MM');
   
-  // Calculate stats
+  // 计算统计信息
   const monthlyCheckIns = checkIns.filter(c => c.date.startsWith(currentMonthStr));
   const checkInCount = monthlyCheckIns.length;
   
-  // Calculate completion rate
-  // Denominator: Days passed in current month so far
+  // 计算完成率
+  // 分母：当前月已过去的天数
   const start = startOfMonth(now);
   const end = endOfMonth(now);
   const today = startOfDay(now);

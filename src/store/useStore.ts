@@ -9,7 +9,7 @@ interface AppState {
   settings: UserSettings;
   user: UserProfile;
   
-  // Actions
+  // 操作
   addTask: (title: string, date?: string) => void;
   toggleTask: (id: string) => void;
   deleteTask: (id: string) => void;
@@ -19,7 +19,7 @@ interface AppState {
   login: (name: string) => void;
   logout: () => void;
   
-  // Selectors
+  // 选择器
   getTasksByDate: (date: string) => Task[];
   getCheckInByDate: (date: string) => CheckIn | undefined;
 }
@@ -31,7 +31,7 @@ export const useAppStore = create<AppState>()(
       checkIns: [],
       settings: {
         theme: 'light',
-        primaryColor: '#10b981', // Emerald-500
+        primaryColor: '#10b981', // 翠绿色-500
       },
       user: {
         name: '访客用户',

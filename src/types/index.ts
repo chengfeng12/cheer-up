@@ -6,6 +6,7 @@ export interface Task {
 }
 
 export interface CheckIn {
+  id?: string; // Optional id from server
   date: string; // ISO date string YYYY-MM-DD
   mood?: 'happy' | 'neutral' | 'sad';
   note?: string;
@@ -20,4 +21,26 @@ export interface UserProfile {
   name: string;
   avatar?: string;
   isGuest: boolean;
+}
+
+export interface UserInfo {
+  profile: UserProfile;
+  settings: UserSettings;
+  stats: {
+    totalTasks: number;
+    completedTasks: number;
+    pendingTasks: number;
+    totalCheckIns: number;
+  };
+}
+
+export interface UserInfo {
+  profile: UserProfile;
+  settings: UserSettings;
+  stats: {
+    totalTasks: number;
+    completedTasks: number;
+    pendingTasks: number;
+    totalCheckIns: number;
+  };
 }

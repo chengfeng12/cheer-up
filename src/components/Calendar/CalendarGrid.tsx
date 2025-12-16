@@ -16,14 +16,14 @@ import {
 import { zhCN } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, X, CheckCircle2, Circle, CalendarPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAppStore } from '../../store/useStore';
+import { useHybridStore } from '../../store/useHybridStore';
 import LoginModal from '../Auth/LoginModal';
 
 const CalendarGrid: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const { checkIns, getTasksByDate, addCheckIn, user } = useAppStore();
+  const { checkIns, getTasksByDate, addCheckIn, user } = useHybridStore();
 
   const days = eachDayOfInterval({
     start: startOfWeek(startOfMonth(currentMonth), { locale: zhCN }),
@@ -49,7 +49,7 @@ const CalendarGrid: React.FC = () => {
   };
 
   const handleRetroactiveCheckIn = () => {
-    if (user.isGuest) {
+    if (!user) {
       vibrate(50);
       setShowLoginModal(true);
       return;
@@ -136,7 +136,7 @@ const CalendarGrid: React.FC = () => {
         </AnimatePresence>
       </div>
 
-      {/* Day Detail Modal */}
+      {/* 日期详情弹窗 */}
       <AnimatePresence>
         {selectedDate && (
           <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center sm:px-4">
