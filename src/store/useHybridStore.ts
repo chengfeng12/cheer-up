@@ -11,12 +11,12 @@ interface HybridState {
   checkIns: CheckIn[];
   settings: UserSettings;
   user: UserProfile | null;
-  
+
   // 同步设置
   syncEnabled: boolean;
   autoSync: boolean;
   pendingSync: boolean;
-  
+
   // 本地和 API 都可用的操作
   addTask: (title: string, date?: string) => Promise<void>;
   toggleTask: (id: string) => Promise<void>;
@@ -27,18 +27,20 @@ interface HybridState {
   login: (name: string, email?: string, password?: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
-  
+
   // 同步相关操作
   enableSync: () => void;
   disableSync: () => void;
   syncNow: () => Promise<void>;
-  
+
   // 选择器
   getTasksByDate: (date: string) => Task[];
   getCheckInByDate: (date: string) => CheckIn | undefined;
-  
+
+  // 计算属性
   // 计算属性
   isAuthenticated: () => boolean;
+  validateAuth: () => Promise<boolean>;
 }
 
 export const useHybridStore = create<HybridState>()(
@@ -61,14 +63,14 @@ export const useHybridStore = create<HybridState>()(
 
         try {
           const apiStore = useApiStore.getState();
-          
+
           // 上传本地更改到服务器
           const { tasks, checkIns } = get();
           await apiStore.syncToServer({ tasks, checkIns });
-          
+
           // 从服务器下载最新数据
           const { tasks: serverTasks, checkIns: serverCheckIns } = await apiStore.syncFromServer();
-          
+
           // 合并本地和服务器数据
           set({
             tasks: serverTasks,
@@ -88,7 +90,7 @@ export const useHybridStore = create<HybridState>()(
         return useApiStore.getState().isAuthenticated;
       };
 
-        return {
+      return {
         // 初始状态
         tasks: [],
         checkIns: [],
@@ -257,11 +259,11 @@ export const useHybridStore = create<HybridState>()(
               const apiStore = useApiStore.getState();
               await apiStore.updateSettings(newSettings);
               set({ pendingSync: false });
-          } catch (error) {
-            const { showError } = useErrorStore.getState();
-            showError('设置更新失败，请稍后重试', 'error');
-            console.error('Failed to update settings on server:', error);
-          }
+            } catch (error) {
+              const { showError } = useErrorStore.getState();
+              showError('设置更新失败，请稍后重试', 'error');
+              console.error('Failed to update settings on server:', error);
+            }
           }
         },
 
@@ -271,14 +273,14 @@ export const useHybridStore = create<HybridState>()(
           try {
             const apiStore = useApiStore.getState();
             await apiStore.login('', email, password); // name is not needed for login
-            
+
             set({
               user: apiStore.user!,
               syncEnabled: true,
             });
           } catch (error) {
-            const { showError } = useErrorStore.getState();
-            showError('登录失败，请检查用户名和密码', 'error');
+            // const { showError } = useErrorStore.getState();
+            // showError('登录失败，请检查用户名和密码', 'error');
             console.error('Login failed:', error);
             throw error;
           }
@@ -288,7 +290,7 @@ export const useHybridStore = create<HybridState>()(
           try {
             const apiStore = useApiStore.getState();
             await apiStore.register(name, email, password);
-            
+
             set({
               user: apiStore.user!,
               syncEnabled: true,
@@ -304,12 +306,9 @@ export const useHybridStore = create<HybridState>()(
         logout: () => {
           const apiStore = useApiStore.getState();
           apiStore.logout();
-          
+
           set({
-            user: {
-              name: '访客用户',
-              isGuest: true,
-            },
+            user: null,
             syncEnabled: false,
             pendingSync: false,
           });
@@ -341,6 +340,16 @@ export const useHybridStore = create<HybridState>()(
         },
 
         isAuthenticated: isAuthenticated,
+
+        validateAuth: async () => {
+          const apiStore = useApiStore.getState();
+          const isValid = await apiStore.validateAuth();
+          if (isValid) {
+            // 同步最新的用户信息到本地 store
+            set({ user: apiStore.user, syncEnabled: true });
+          }
+          return isValid;
+        },
       };
     },
     {

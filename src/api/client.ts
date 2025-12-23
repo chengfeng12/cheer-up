@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3003/api';
+const API_BASE_URL = '/api';
 
 interface ApiClient {
   get<T>(url: string): Promise<T>;
@@ -44,10 +44,10 @@ class ApiClientImpl implements ApiClient {
     }
 
     let response: Response;
-    
+
     try {
       response = await fetch(`${API_BASE_URL}${url}`, config);
-    } catch (error) {
+    } catch (error: any) {
       console.error('网络请求失败:', {
         url: `${API_BASE_URL}${url}`,
         method,
@@ -57,15 +57,17 @@ class ApiClientImpl implements ApiClient {
       throw new Error(`网络连接失败: ${error.message}`);
     }
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const error = new Error(errorData.message || `HTTP error! status: ${response.status}`) as any;
+    const responseData = await response.json().catch(() => ({}));
+
+    if (!response.ok || (responseData && responseData.success === false)) {
+      const message = responseData.message || `HTTP error! status: ${response.status}`;
+      const error = new Error(message) as any;
       error.status = response.status;
-      error.code = errorData.code;
+      error.code = responseData.code; // Business error code
       throw error;
     }
 
-    return response.json();
+    return responseData;
   }
 
   async get<T>(url: string): Promise<T> {

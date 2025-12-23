@@ -7,7 +7,7 @@ interface AuthGuardProps {
 }
 
 const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
-  const { isAuthenticated, validateAuth } = useHybridStore();
+  const { user, validateAuth } = useHybridStore();
   const location = useLocation();
 
   useEffect(() => {
@@ -17,7 +17,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     validateAuth();
   }, [validateAuth]);
 
-  if (!isAuthenticated) {
+  if (!user) {
     // Redirect to login page but save the attempted location
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
